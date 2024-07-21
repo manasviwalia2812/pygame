@@ -1,6 +1,7 @@
 import pygame
 import os
 pygame.font.init()
+pygame.mixer.init()
 
 #defining the window dimensions 
 WIDTH,HEIGHT= 900,500
@@ -14,7 +15,11 @@ YELLOW = (255, 255, 0)
 
 BORDER= pygame.Rect(WIDTH//2-5,0,10,HEIGHT)
 
+BULLET_HIT_SOUND = pygame.mixer.Sound(os.path.join('Assets/Grenade+1.mp3'))
+BULLET_FIRE_SOUND = pygame.mixer.Sound(os.path.join('Assets/Gun+Silencer.mp3'))
+
 HEALTH_FONT = pygame.font.SysFont('comicsans', 40)
+WINNER_FONT= pygame.font.SysFont('comicsans',100)
 
 FPS = 60              #frames per second. we use it to define how many times we want to run the while loop (update the screen) so the speed of the game remains constant on different computers
 VEL=5           #Velocity of the spaceships
@@ -94,6 +99,12 @@ def handle_bullets(yellow_bullets, red_bullets, yellow, red):
     elif bullet.x < 0:
       red_bullets.remove(bullet)
 
+def draw_winner(text):
+  draw_text = WINNER_FONT.render(text, 1, WHITE)
+  WIN.blit(draw_text,(WIDTH/2 - draw_text.get_width()/2, HEIGHT/2 -draw_text.get_height()/2))
+  pygame.display.update()
+  pygame.time.delay(4000)
+
 def main():
   red= pygame.Rect(700,300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)              #pygame rectangle (x,y)
   yellow= pygame.Rect(100,300, SPACESHIP_WIDTH, SPACESHIP_HEIGHT)
@@ -111,22 +122,27 @@ def main():
     for event in pygame.event.get():          #checks for all the possible events that can happen
       if event.type == pygame.QUIT:           #if the user quits the window
         run= False              #while loop (game) will end
+        pygame.quit()
       
       if event.type == pygame.KEYDOWN:
         if event.key == pygame.K_LCTRL and len(yellow_bullets) < MAX_BULLETS :
           bullet = pygame.Rect(yellow.x + yellow.width, yellow.y+ yellow.height//2 -2, 10, 5)
           yellow_bullets.append(bullet)
+          BULLET_FIRE_SOUND.play()
 
         
         if event.key == pygame.K_RCTRL and len(red_bullets) < MAX_BULLETS :
           bullet = pygame.Rect(red.x, red.y+ red.height//2 -2, 10, 5)
           red_bullets.append(bullet)
+          BULLET_FIRE_SOUND.play()
 
       if event.type==RED_HIT:
         red_health -=1
+        BULLET_HIT_SOUND.play()
       
       if event.type == YELLOW_HIT:
         yellow_health -=1
+        BULLET_HIT_SOUND.play()
     
     winner_text= ""
     if red_health <=0 :
@@ -136,7 +152,8 @@ def main():
       winner_text ="Red wins!"
     
     if winner_text != "":
-      pass #SOMEONE WON
+      draw_winner(winner_text)
+      break
 
     keys_pressed=pygame.key.get_pressed()       #it tells us what keys are currently being pressed down each time the while loop runs. so we can check if the key we want to use to run the game is being pressed down or not
     yellow_handle_movement(keys_pressed, yellow)
@@ -146,7 +163,7 @@ def main():
     draw_window(red, yellow, red_bullets, yellow_bullets, red_health , yellow_health) #draws the window
     
   
-  pygame.quit()
+  main()
 
 if __name__=="__main__":
   main()
